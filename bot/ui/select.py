@@ -57,3 +57,6 @@ class DateSelect(discord.ui.Select):
 
             case _:
                 print("選択外")
+
+        self.disabled = True
+        await interaction.followup.edit_message(interaction.message.id, view=self.view)
