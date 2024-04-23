@@ -17,7 +17,9 @@ import os
 
 
 INITIAL_EXTENTIONS = [
-    "cogs.register"
+    "cogs.register",
+    "cogs.task",
+    "cogs.vote"
 ]
 
 Intents = discord.Intents.all()

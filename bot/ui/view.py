@@ -9,8 +9,10 @@ __author__ = "simeiro"
 __version__ = "0.0.0"
 __date__ = "2024/04/06(Created: 2024/04/06)"
 
+import os
+from datetime import datetime
+
 import discord
-from discord.ui import Item
 
 from bot.register_data_manager import RegisterDataManager
 from bot.ui import select
@@ -36,15 +38,24 @@ class ContinueAgendaView(discord.ui.View):
         await disable_button_by_followup(self, interaction)
 
 
-
-
-
 class SendMailView(discord.ui.View):
 
     @discord.ui.button(label="この内容で送信する", style=discord.ButtonStyle.green)
     async def green(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
-        await interaction.response.send_message("送信しました")
-        await disable_button_by_followup(self, interaction)
+        try:
+
+            channel_id = int(os.getenv("CAC_CHANNEL_ID"))
+            target_channel = interaction.guild.get_channel(channel_id)
+            register_data = RegisterDataManager.register_data_dict.get(interaction.user.id)
+            register_data.save_to_json()
+            await target_channel.send(
+                modal.return_mail_text(interaction.user.id),
+                view=PowerOfAttorneyView(register_data.date)
+            )
+            await interaction.response.send_message("送信しました")
+            await disable_button_by_followup(self, interaction)
+        except Exception as e:
+            print(e)
 
     @discord.ui.button(label="場所を変更する", style=discord.ButtonStyle.gray)
     async def gray(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
@@ -59,7 +70,25 @@ class SendMailView(discord.ui.View):
         await disable_button_by_followup(self, interaction)
 
 
+class PowerOfAttorneyView(discord.ui.View):
+
+    def __init__(self, date: datetime):
+        self.date = date
+
+        super().__init__()
+
+    @discord.ui.button(label="委任状を送信", style=discord.ButtonStyle.green)
+    async def green(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
+        await interaction.response.send_modal(modal.RegisterPowerOfAttorney(self.date))
+
+    @discord.ui.button(label="委任状を取り消す", style=discord.ButtonStyle.red)
+    async def red(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
+        await interaction.response.send_message(view=DateSelectView())
+
+
 async def disable_button_by_followup(view: discord.ui.View, interaction: discord.Interaction):
     for item in view.children:
         item.disabled = True
     await interaction.followup.edit_message(interaction.message.id, view=view)
+
+

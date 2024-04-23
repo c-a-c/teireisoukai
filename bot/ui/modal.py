@@ -9,6 +9,7 @@ __author__ = "simeiro"
 __version__ = "0.0.0"
 __date__ = "2024/04/06(Created: 2024/04/06)"
 
+import json
 from datetime import datetime
 import discord
 from overrides import overrides
@@ -81,6 +82,25 @@ class RegisterPlace(discord.ui.Modal, title="場所の登録"):
         await interaction.response.send_message(error)
 
 
+class RegisterPowerOfAttorney(discord.ui.Modal, title="委任状登録"):
+    power_of_attorney = discord.ui.TextInput(
+        label="欠席理由",
+        placeholder="例: 授業があるため"
+    )
+
+    def __init__(self, date: datetime):
+        self.date = date
+
+        super().__init__()
+
+    async def on_submit(self, interaction: discord.Interaction):
+        update_power_of_attorney(self.date, interaction.user.id, self.power_of_attorney.value)
+        await interaction.response.send_message(self.date)
+
+    async def on_error(self, interaction: discord.Interaction, error: Exception) -> None:
+        await interaction.response.send_message(error)
+
+
 def return_mail_text(id: int):
     register_data = RegisterDataManager.register_data_dict.get(id)
     date = register_data.date
@@ -101,3 +121,17 @@ def return_mail_text(id: int):
         mail_text += line + "\n"
 
     return mail_text
+
+
+def update_power_of_attorney(date: datetime, id: int, reason_text: str):
+    with open('./../json/meetingData.json', 'r', encoding='utf-8') as f:
+        existing_json = json.load(f)
+
+    date_str = date.strftime("%Y-%m-%d %H:%M")
+    if existing_json[date_str]["powerOfAttorney"]:
+        existing_json[date_str]["powerOfAttorney"][str(id)] = reason_text
+    else:
+        existing_json[date_str]["powerOfAttorney"] = {str(id): reason_text}
+
+    with open('./../json/meetingData.json', 'w', encoding='utf-8') as f:
+        f.write(json.dumps(existing_json, indent=4, ensure_ascii=False))
