@@ -72,7 +72,9 @@ class PowerOfAttorneyView(discord.ui.View):
     def __init__(self, date: datetime):
         self.date = date
 
-        super().__init__(timeout=None)
+        super().__init__(
+            timeout=None
+        )
 
     @discord.ui.button(label="委任状を提出", style=discord.ButtonStyle.green)
     async def green(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:

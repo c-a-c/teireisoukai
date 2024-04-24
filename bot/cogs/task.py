@@ -16,7 +16,6 @@ from typing import List
 
 import discord
 from discord.ext import commands, tasks
-from discord import app_commands
 
 
 class Task(commands.Cog):

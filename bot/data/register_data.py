@@ -12,8 +12,6 @@ __date__ = "2024/04/06(Created: 2024/04/06)"
 import json
 from datetime import datetime, timedelta
 
-import discord
-
 
 class RegisterData:
     """

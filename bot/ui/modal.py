@@ -12,22 +12,29 @@ __date__ = "2024/04/06(Created: 2024/04/06)"
 import json
 from datetime import datetime
 import discord
-from overrides import overrides
 
 from bot.register_data_manager import RegisterDataManager
 from bot.ui import view
 
 
-class IndividualDateModal(discord.ui.Modal, title="個別の日時設定"):
+class IndividualDateModal(discord.ui.Modal):
     """
     日時の個別設定を選択した際に表示するmodal
     """
-    date = discord.ui.TextInput(
-        label='日時',
-        placeholder='入力例: 2024/04/01/13/30',
-        min_length=16,
-        max_length=16
-    )
+
+    def __init__(self):
+        self.date = discord.ui.TextInput(
+            label='日時',
+            placeholder='入力例: 2024/04/01/13/30',
+            min_length=16,
+            max_length=16
+        )
+
+        super().__init__(
+            title="個別の日時設定"
+        )
+
+        self.add_item(self.date)
 
     async def on_submit(self, interaction: discord.Interaction):
         date_format = "%Y/%m/%d/%H/%M"
@@ -40,11 +47,19 @@ class IndividualDateModal(discord.ui.Modal, title="個別の日時設定"):
         await interaction.response.send_message(error)
 
 
-class RegisterAgenda(discord.ui.Modal, title="議題の登録"):
-    agenda = discord.ui.TextInput(
-        label="議題 (、で区切ってください）",
-        placeholder="入力例: 神山祭について、サタジャンについて"
-    )
+class RegisterAgenda(discord.ui.Modal):
+
+    def __init__(self):
+        self.agenda = discord.ui.TextInput(
+            label="議題 (、で区切ってください）",
+            placeholder="入力例: 神山祭について、サタジャンについて"
+        )
+
+        super().__init__(
+            title="議題登録"
+        )
+
+        self.add_item(self.agenda)
 
     async def on_submit(self, interaction: discord.Interaction):
         agenda_text = self.agenda.value.replace("、", "\n・")
@@ -63,11 +78,19 @@ class RegisterAgenda(discord.ui.Modal, title="議題の登録"):
         await interaction.response.send_message(error)
 
 
-class RegisterPlace(discord.ui.Modal, title="場所の登録"):
-    place = discord.ui.TextInput(
-        label="場所",
-        placeholder="例: 10201教室, Discord"
-    )
+class RegisterPlace(discord.ui.Modal):
+
+    def __init__(self):
+        self.place = discord.ui.TextInput(
+            label="場所",
+            placeholder="例: 10201教室, Discord"
+        )
+
+        super().__init__(
+            title="場所の登録"
+        )
+
+        self.add_item(self.place)
 
     async def on_submit(self, interaction: discord.Interaction):
         data_dict = RegisterDataManager.register_data_dict.get(interaction.user.id)
@@ -82,16 +105,20 @@ class RegisterPlace(discord.ui.Modal, title="場所の登録"):
         await interaction.response.send_message(error)
 
 
-class RegisterPowerOfAttorney(discord.ui.Modal, title="委任状登録"):
-    power_of_attorney = discord.ui.TextInput(
-        label="欠席理由",
-        placeholder="例: 授業があるため"
-    )
+class RegisterPowerOfAttorney(discord.ui.Modal):
 
     def __init__(self, date: datetime):
+        self.power_of_attorney = discord.ui.TextInput(
+            label="欠席理由",
+            placeholder="例: 授業があるため"
+        )
         self.date = date
 
-        super().__init__()
+        super().__init__(
+            title="委任状登録"
+        )
+
+        self.add_item(self.power_of_attorney)
 
     async def on_submit(self, interaction: discord.Interaction):
         now = datetime.now()
@@ -105,7 +132,8 @@ class RegisterPowerOfAttorney(discord.ui.Modal, title="委任状登録"):
         )
 
         update_power_of_attorney(self.date, interaction.user.id, text)
-        await interaction.response.send_message("以下の内容で提出しますか？", embed=embed, view=view.SubmitPowerOfAttorneyView(self.date), ephemeral=True)
+        await interaction.response.send_message("以下の内容で提出しますか？", embed=embed,
+                                                view=view.SubmitPowerOfAttorneyView(self.date), ephemeral=True)
 
     async def on_error(self, interaction: discord.Interaction, error: Exception) -> None:
         await interaction.response.send_message(error)
