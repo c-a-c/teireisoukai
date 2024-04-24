@@ -94,8 +94,18 @@ class RegisterPowerOfAttorney(discord.ui.Modal, title="委任状登録"):
         super().__init__()
 
     async def on_submit(self, interaction: discord.Interaction):
-        update_power_of_attorney(self.date, interaction.user.id, self.power_of_attorney.value)
-        await interaction.response.send_message(self.date)
+        now = datetime.now()
+        text = f"議長殿 私は{self.date.year}年{self.date.month}月{self.date.day}日実施の定例総会において、決議権を行使する一切の権限を委任いたします。\n"
+        text += f"提出日: {now.year}年{now.month}月{now.day}日\n"
+        text += f"discord名: {interaction.user.name}\n"
+        text += f"理由: {self.power_of_attorney.value}\n"
+
+        embed = discord.Embed(
+            description=text
+        )
+
+        update_power_of_attorney(self.date, interaction.user.id, text)
+        await interaction.response.send_message("以下の内容で提出しますか？", embed=embed, view=view.SubmitPowerOfAttorneyView(self.date), ephemeral=True)
 
     async def on_error(self, interaction: discord.Interaction, error: Exception) -> None:
         await interaction.response.send_message(error)
