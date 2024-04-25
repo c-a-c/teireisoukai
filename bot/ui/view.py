@@ -21,55 +21,68 @@ from bot.ui import modal
 
 
 class DateSelectView(discord.ui.View):
-    def __init__(self):
+    def __init__(self, bot):
+        self.bot = bot
         super().__init__()
-        self.add_item(select.DateSelect())
+        self.add_item(select.DateSelect(bot=self.bot))
 
 
 class ContinueAgendaView(discord.ui.View):
 
+    def __init__(self, bot):
+        self.bot = bot
+
+        super().__init__()
+
     @discord.ui.button(label="議題登録へ移る", style=discord.ButtonStyle.green)
     async def green(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
-        await interaction.response.send_modal(modal.RegisterAgenda())
+        await interaction.response.send_modal(modal.RegisterAgenda(bot=self.bot))
         await disable_button_by_followup(self, interaction)
 
     @discord.ui.button(label="戻る", style=discord.ButtonStyle.red)
     async def red(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
-        await interaction.response.send_message(view=DateSelectView())
+        await interaction.response.send_message(view=DateSelectView(bot=self.bot))
         await disable_button_by_followup(self, interaction)
 
 
 class SendMailView(discord.ui.View):
 
+    def __init__(self, bot):
+        self.bot = bot
+
+        super().__init__()
+
     @discord.ui.button(label="この内容で送信する", style=discord.ButtonStyle.green)
     async def green(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
-        channel_id = int(os.getenv("CAC_CHANNEL_ID"))
-        target_channel = interaction.guild.get_channel(channel_id)
         register_data = RegisterDataManager.register_data_dict.get(interaction.user.id)
         register_data.save_to_json()
-        await target_channel.send(
+
+        guild = self.bot.get_guild(int(os.getenv("CAC_GUILD_ID")))
+        channel = guild.get_channel(int(os.getenv("CAC_CHANNEL_ID")))
+        await channel.send(
             modal.return_mail_text(interaction.user.id),
-            view=PowerOfAttorneyView(register_data.date)
+            view=PowerOfAttorneyView(bot=self.bot, date=register_data.date)
         )
-        await interaction.response.send_message("送信しました")
+        await interaction.response.send_message("送信しました。")
         await disable_button_by_followup(self, interaction)
 
     @discord.ui.button(label="場所を変更する", style=discord.ButtonStyle.gray)
     async def gray(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
-        await interaction.response.send_modal(modal.RegisterPlace())
+        await interaction.response.send_modal(modal.RegisterPlace(bot=self.bot))
         await disable_button_by_followup(self, interaction)
 
     @discord.ui.button(label="戻る", style=discord.ButtonStyle.red)
     async def red(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
         data_dict = RegisterDataManager.register_data_dict.get(interaction.user.id)
         embed = discord.Embed(title="登録日時", description=data_dict.date)
-        await interaction.response.send_message(view=ContinueAgendaView(), embed=embed)
+        await interaction.response.send_message(view=ContinueAgendaView(bot=self.bot), embed=embed)
         await disable_button_by_followup(self, interaction)
 
 
 class PowerOfAttorneyView(discord.ui.View):
 
-    def __init__(self, date: datetime):
+    def __init__(self, bot, date: datetime):
+        self.bot = bot
         self.date = date
 
         super().__init__(
@@ -78,7 +91,7 @@ class PowerOfAttorneyView(discord.ui.View):
 
     @discord.ui.button(label="委任状を提出", style=discord.ButtonStyle.green)
     async def green(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
-        await interaction.response.send_modal(modal.RegisterPowerOfAttorney(self.date))
+        await interaction.response.send_modal(modal.RegisterPowerOfAttorney(bot=self.bot, date=self.date))
 
     @discord.ui.button(label="委任状を取り消す", style=discord.ButtonStyle.red)
     async def red(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
@@ -93,14 +106,15 @@ class PowerOfAttorneyView(discord.ui.View):
             await interaction.response.send_message(
                 "以下の委任状を取り消しますか？",
                 embed=embed,
-                view=DeletePowerOfAttorneyView(self.date),
+                view=DeletePowerOfAttorneyView(bot=self.bot, date=self.date),
                 ephemeral=True
             )
 
 
 class SubmitPowerOfAttorneyView(discord.ui.View):
 
-    def __init__(self, date: datetime):
+    def __init__(self, bot, date: datetime):
+        self.bot = bot
         self.date = date
 
         super().__init__()
@@ -113,7 +127,8 @@ class SubmitPowerOfAttorneyView(discord.ui.View):
 
 class DeletePowerOfAttorneyView(discord.ui.View):
 
-    def __init__(self, date: datetime):
+    def __init__(self, bot, date: datetime):
+        self.bot = bot
         self.date = date
 
         super().__init__()

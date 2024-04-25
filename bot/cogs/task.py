@@ -41,7 +41,7 @@ class Task(commands.Cog):
             json_data = json.load(f)
 
         if now_str not in json_data:
-            print("会議ないよ")
+            # print("会議ないよ")
             return
 
         if self.get_attendance_rate(now_str) > 2 / 3:

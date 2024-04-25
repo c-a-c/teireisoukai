@@ -17,7 +17,8 @@ from bot.ui import view, modal
 
 
 class DateSelect(discord.ui.Select):
-    def __init__(self):
+    def __init__(self, bot):
+        self.bot = bot
 
         options = [
             discord.SelectOption(label="次の水曜13:30-", value="one_week_later", description=""),
@@ -46,17 +47,23 @@ class DateSelect(discord.ui.Select):
             case "one_week_later":
                 register_data.date = next_wednesday.replace(hour=13, minute=30, second=0, microsecond=0)
                 embed = discord.Embed(title="登録日時", description=register_data.date)
-                await interaction.response.send_message(view=view.ContinueAgendaView(), embed=embed)
+                await interaction.response.send_message(view=view.ContinueAgendaView(bot=self.bot), embed=embed)
             case "two_week_later":
                 next_next_wednesday = next_wednesday + timedelta(days=7)
                 register_data.date = next_next_wednesday.replace(hour=13, minute=30, second=0, microsecond=0)
                 embed = discord.Embed(title="登録日時", description=register_data.date)
-                await interaction.response.send_message(view=view.ContinueAgendaView(), embed=embed)
+                await interaction.response.send_message(view=view.ContinueAgendaView(bot=self.bot), embed=embed)
             case "other":
-                await interaction.response.send_modal(modal.IndividualDateModal())
+                await interaction.response.send_modal(modal.IndividualDateModal(bot=self.bot))
 
             case _:
                 print("選択外")
 
         self.disabled = True
         await interaction.followup.edit_message(interaction.message.id, view=self.view)
+
+
+class DeleteDateSelect(discord.ui.Select):
+    def __init__(self, bot):
+        self.bot = bot
+        super().__init__()

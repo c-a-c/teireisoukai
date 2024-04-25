@@ -32,7 +32,7 @@ class Register(commands.Cog):
         """
 
         RegisterDataManager.add_data(interaction.user.id)
-        await interaction.response.send_message(view=view.DateSelectView())
+        await interaction.response.send_message(view=view.DateSelectView(bot=self.bot))
 
     @commands.Cog.listener()
     async def on_ready(self):

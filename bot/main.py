@@ -19,7 +19,8 @@ import os
 INITIAL_EXTENTIONS = [
     "cogs.register",
     "cogs.task",
-    "cogs.vote"
+    "cogs.vote",
+    "cogs.delete_meeting"
 ]
 
 Intents = discord.Intents.all()

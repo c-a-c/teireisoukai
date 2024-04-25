@@ -22,7 +22,8 @@ class IndividualDateModal(discord.ui.Modal):
     日時の個別設定を選択した際に表示するmodal
     """
 
-    def __init__(self):
+    def __init__(self, bot):
+        self.bot = bot
         self.date = discord.ui.TextInput(
             label='日時',
             placeholder='入力例: 2024/04/01/13/30',
@@ -41,7 +42,7 @@ class IndividualDateModal(discord.ui.Modal):
         register_data = RegisterDataManager.register_data_dict.get(interaction.user.id)
         register_data.date = datetime.strptime(self.date.value, date_format)
         embed = discord.Embed(title="登録日時", description=register_data.date)
-        await interaction.response.send_message(view=view.ContinueAgendaView(), embed=embed)
+        await interaction.response.send_message(view=view.ContinueAgendaView(bot=self.bot), embed=embed)
 
     async def on_error(self, interaction: discord.Interaction, error: Exception) -> None:
         await interaction.response.send_message(error)
@@ -49,7 +50,8 @@ class IndividualDateModal(discord.ui.Modal):
 
 class RegisterAgenda(discord.ui.Modal):
 
-    def __init__(self):
+    def __init__(self, bot):
+        self.bot = bot
         self.agenda = discord.ui.TextInput(
             label="議題 (、で区切ってください）",
             placeholder="入力例: 神山祭について、サタジャンについて"
@@ -72,7 +74,7 @@ class RegisterAgenda(discord.ui.Modal):
             title="メール確認",
             description=return_mail_text(interaction.user.id)
         )
-        await interaction.response.send_message(view=view.SendMailView(), embed=embed)
+        await interaction.response.send_message(view=view.SendMailView(bot=self.bot), embed=embed)
 
     async def on_error(self, interaction: discord.Interaction, error: Exception) -> None:
         await interaction.response.send_message(error)
@@ -80,7 +82,8 @@ class RegisterAgenda(discord.ui.Modal):
 
 class RegisterPlace(discord.ui.Modal):
 
-    def __init__(self):
+    def __init__(self, bot):
+        self.bot = bot
         self.place = discord.ui.TextInput(
             label="場所",
             placeholder="例: 10201教室, Discord"
@@ -99,7 +102,7 @@ class RegisterPlace(discord.ui.Modal):
             title="メール確認",
             description=return_mail_text(interaction.user.id)
         )
-        await interaction.response.send_message(view=view.SendMailView(), embed=embed)
+        await interaction.response.send_message(view=view.SendMailView(bot=self.bot), embed=embed)
 
     async def on_error(self, interaction: discord.Interaction, error: Exception) -> None:
         await interaction.response.send_message(error)
@@ -107,7 +110,8 @@ class RegisterPlace(discord.ui.Modal):
 
 class RegisterPowerOfAttorney(discord.ui.Modal):
 
-    def __init__(self, date: datetime):
+    def __init__(self, bot, date: datetime):
+        self.bot = bot
         self.power_of_attorney = discord.ui.TextInput(
             label="欠席理由",
             placeholder="例: 授業があるため"
@@ -133,7 +137,7 @@ class RegisterPowerOfAttorney(discord.ui.Modal):
 
         update_power_of_attorney(self.date, interaction.user.id, text)
         await interaction.response.send_message("以下の内容で提出しますか？", embed=embed,
-                                                view=view.SubmitPowerOfAttorneyView(self.date), ephemeral=True)
+                                                view=view.SubmitPowerOfAttorneyView(bot=self.bot, date=self.date), ephemeral=True)
 
     async def on_error(self, interaction: discord.Interaction, error: Exception) -> None:
         await interaction.response.send_message(error)
@@ -156,7 +160,7 @@ def return_mail_text(id: int):
         line = line.replace("agenda", register_data.agenda)
         line = line.replace("place", register_data.place)
 
-        mail_text += line + "\n"
+        mail_text += line
 
     return mail_text
 
