@@ -22,6 +22,7 @@ class RegisterData:
         self.date = datetime.now()
         self.agenda = None
         self.place = get_place_by_json()
+        self.message_id = None
 
     def save_to_json(self):
         date = self.date.strftime("%Y-%m-%d %H:%M")
@@ -33,6 +34,7 @@ class RegisterData:
             date: {
                 "agenda": self.agenda,
                 "place": self.place,
+                "messageID": self.message_id,
                 "powerOfAttorney": {
                 }
             }

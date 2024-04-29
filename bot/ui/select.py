@@ -9,6 +9,7 @@ __author__ = "simeiro"
 __version__ = "0.0.0"
 __date__ = "2024/04/06(Created: 2024/04/06)"
 
+import json
 from datetime import datetime, timedelta
 import discord
 
@@ -64,6 +65,40 @@ class DateSelect(discord.ui.Select):
 
 
 class DeleteDateSelect(discord.ui.Select):
-    def __init__(self, bot):
+    def __init__(self, bot, date_list):
         self.bot = bot
-        super().__init__()
+        self.date_list = date_list
+
+        options = []
+        for date in date_list:
+            options.append(discord.SelectOption(label=date, value=date))
+
+        super().__init__(
+            placeholder="削除する会議を選択してください",
+            custom_id="delete_date_select",
+            min_values=1,
+            max_values=1,
+            options=options
+        )
+
+    async def callback(self, interaction: discord.Interaction):
+        embed = discord.Embed(
+            description=get_delete_text(self.values[0])
+        )
+        await interaction.response.send_message("以下の会議を削除しますか？", embed=embed, view=view.DeleteMeetingView(bot=self.bot, date_str=self.values[0]))
+
+        self.disabled = True
+        await interaction.followup.edit_message(interaction.message.id, view=self.view)
+
+
+def get_delete_text(date_str):
+    with open("./../json/meetingData.json", "r", encoding="utf-8") as f:
+        json_data = json.load(f)
+    meeting_data = json_data[date_str]
+
+    return_text = ""
+    return_text += "◎議題\n" + meeting_data["agenda"] + "\n"
+    return_text += "場所: " + meeting_data["place"]
+
+    return return_text
+

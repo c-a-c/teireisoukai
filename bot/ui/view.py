@@ -15,6 +15,7 @@ from datetime import datetime
 
 import discord
 
+from bot import register_data_manager
 from bot.register_data_manager import RegisterDataManager
 from bot.ui import select
 from bot.ui import modal
@@ -25,6 +26,15 @@ class DateSelectView(discord.ui.View):
         self.bot = bot
         super().__init__()
         self.add_item(select.DateSelect(bot=self.bot))
+
+
+class DeleteDateSelectView(discord.ui.View):
+    def __init__(self, bot, date_list):
+        self.bot = bot
+
+        super().__init__()
+
+        self.add_item(select.DeleteDateSelect(bot=self.bot, date_list=date_list))
 
 
 class ContinueAgendaView(discord.ui.View):
@@ -55,16 +65,18 @@ class SendMailView(discord.ui.View):
     @discord.ui.button(label="この内容で送信する", style=discord.ButtonStyle.green)
     async def green(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
         register_data = RegisterDataManager.register_data_dict.get(interaction.user.id)
-        register_data.save_to_json()
 
         guild = self.bot.get_guild(int(os.getenv("CAC_GUILD_ID")))
         channel = guild.get_channel(int(os.getenv("CAC_CHANNEL_ID")))
-        await channel.send(
+        message = await channel.send(
             modal.return_mail_text(interaction.user.id),
             view=PowerOfAttorneyView(bot=self.bot, date=register_data.date)
         )
         await interaction.response.send_message("送信しました。")
         await disable_button_by_followup(self, interaction)
+
+        register_data.message_id = message.id
+        register_data.save_to_json()
 
     @discord.ui.button(label="場所を変更する", style=discord.ButtonStyle.gray)
     async def gray(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
@@ -142,6 +154,20 @@ class DeletePowerOfAttorneyView(discord.ui.View):
             await interaction.response.send_message("削除時にエラーが発生しました。")
 
 
+class DeleteMeetingView(discord.ui.View):
+    def __init__(self, bot, date_str):
+        self.bot = bot
+        self.date_str = date_str
+
+        super().__init__()
+
+    @discord.ui.button(label="取り消す", style=discord.ButtonStyle.red)
+    async def red(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
+        delete_meeting(self.date_str)
+        await interaction.response.send_message(self.date_str + "会議を取り消しました。")
+        await disable_button_by_followup(self, interaction)
+
+
 async def disable_button_by_followup(view: discord.ui.View, interaction: discord.Interaction):
     for item in view.children:
         item.disabled = True
@@ -178,3 +204,12 @@ def delete_power_of_attorney(date: datetime, id: int):
 
     return True
 
+
+def delete_meeting(date_str):
+    with open("./../json/meetingData.json", "r", encoding="utf-8") as f:
+        json_data = json.load(f)
+
+    json_data.pop(date_str)
+
+    with open("./../json/meetingData.json", "w", encoding="utf-8") as f:
+        json.dump(json_data, f, indent=4, ensure_ascii=False)

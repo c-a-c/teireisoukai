@@ -20,7 +20,8 @@ INITIAL_EXTENTIONS = [
     "cogs.register",
     "cogs.task",
     "cogs.vote",
-    "cogs.delete_meeting"
+    "cogs.delete_meeting",
+    "cogs.restart"
 ]
 
 Intents = discord.Intents.all()
