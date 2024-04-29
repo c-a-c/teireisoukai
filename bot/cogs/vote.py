@@ -14,6 +14,9 @@ from discord.ext import commands
 
 
 class Vote(commands.Cog):
+    """
+    投票チャンネルに◯✗の絵文字を付与する記述
+    """
     def __init__(self, bot):
         self.bot = bot
 
@@ -23,14 +26,13 @@ class Vote(commands.Cog):
         bot起動時にロードしていることを確認するためにprintします
         """
 
-        # await self.bot.tree.sync()
         print('loaded : vote.py')
 
     @commands.Cog.listener()
     async def on_message(self, message):
-
-        if message.author.bot:
-            return
+        """
+        あるチャンネルの全てのメッセージに✅❌のリアクションを付与する
+        """
 
         if message.channel.id == int(os.environ.get('VOTE_CHANNEL_ID')):
             await message.add_reaction("✅")

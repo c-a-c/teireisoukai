@@ -9,11 +9,12 @@ __author__ = "simeiro"
 __version__ = "0.0.0"
 __date__ = "2024/04/06(Created: 2024/04/06)"
 
+import os
 import asyncio
 import discord
 from discord.ext import commands
 from dotenv import load_dotenv
-import os
+
 
 
 INITIAL_EXTENTIONS = [
@@ -41,12 +42,19 @@ async def main():
 
 
 async def load_extension():
+    """
+    cogをロードする
+    """
     for cog in INITIAL_EXTENTIONS:
         await bot.load_extension(cog)
 
 
 @bot.event
 async def on_message(message):
+    """
+    messageを受け取ったときの処理
+    ここでは、botのメッセージには反応しないことと、コマンドと一致するかの処理を記述
+    """
 
     if message.author.bot:
         return
@@ -55,6 +63,9 @@ async def on_message(message):
 
 @bot.event
 async def on_ready():
+    """
+    起動時の処理
+    """
 
     print("Bot is ready.")
 

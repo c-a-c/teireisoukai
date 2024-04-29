@@ -9,7 +9,6 @@ __author__ = "simeiro"
 __version__ = "0.0.0"
 __date__ = "2024/04/06(Created: 2024/04/06)"
 
-import json
 from datetime import datetime, timedelta
 import discord
 
@@ -19,6 +18,9 @@ from bot import json_process
 
 
 class DateSelect(discord.ui.Select):
+    """
+    定例総会の日時選択をするui
+    """
     def __init__(self, bot):
         self.bot = bot
 
@@ -37,6 +39,9 @@ class DateSelect(discord.ui.Select):
         )
 
     async def callback(self, interaction: discord.Interaction):
+        """
+        「それ以外」以外はContinueAgendaView、「それ以外」はIndividualDateModalを表示
+        """
 
         now = datetime.now()
         now_weekday = now.weekday()
@@ -66,6 +71,9 @@ class DateSelect(discord.ui.Select):
 
 
 class DeleteDateSelect(discord.ui.Select):
+    """
+    削除する会議を選択するui
+    """
     def __init__(self, bot, date_list):
         self.bot = bot
         self.date_list = date_list
@@ -83,8 +91,11 @@ class DeleteDateSelect(discord.ui.Select):
         )
 
     async def callback(self, interaction: discord.Interaction):
+        """
+        会議内容とDeleteMeetingViewを表示する
+        """
         embed = discord.Embed(
-            description=json_process.get_delete_text(date_str=self.values[0])
+            description=json_process.get_meeting_data_text(date_str=self.values[0])
         )
         await interaction.response.send_message("以下の会議を削除しますか？", embed=embed, view=view.DeleteMeetingView(bot=self.bot, date_str=self.values[0]))
 

@@ -1,9 +1,23 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+"""
+json関連の処理
+"""
+
+__author__ = "simeiro"
+__version__ = "0.0.0"
+__date__ = "2024/04/29(Created: 2024/04/29)"
+
 import json
 import os
 from datetime import datetime, timedelta
 
 
 def delete_meeting(date_str):
+    """
+    jsonからある日程の会議データを削除する
+    """
     with open("../json/meetingData.json", "r", encoding="utf-8") as f:
         json_data = json.load(f)
 
@@ -13,7 +27,10 @@ def delete_meeting(date_str):
         json.dump(json_data, f, indent=4, ensure_ascii=False)
 
 
-def delete_power_of_attorney(date: datetime, id: int):
+def delete_power_of_attorney(date: datetime, user_id: int):
+    """
+    jsonからある日程のある委任状を削除する
+    """
     date_str = date.strftime("%Y-%m-%d %H:%M")
 
     with open("../json/meetingData.json", "r", encoding="utf-8") as f:
@@ -21,7 +38,7 @@ def delete_power_of_attorney(date: datetime, id: int):
 
     try:
         power_of_attorney = json_data[date_str]["powerOfAttorney"]
-        power_of_attorney.pop(str(id))
+        power_of_attorney.pop(str(user_id))
         json_data[date_str]["powerOfAttorney"] = power_of_attorney
     except KeyError:
         return False
@@ -32,19 +49,25 @@ def delete_power_of_attorney(date: datetime, id: int):
     return True
 
 
-def get_power_of_attorney_text(date: datetime, id: int):
+def get_power_of_attorney_text(date: datetime, user_id: int):
+    """
+    ある日程のある委任状の委任状の文字列を返す
+    """
     date_str = date.strftime("%Y-%m-%d %H:%M")
-    with open("../json/meetingData.json") as f:
+    with open("../json/meetingData.json", "r", encoding="utf-8") as f:
         json_data = json.load(f)
     power_of_attorney = json_data[date_str]["powerOfAttorney"]
     for element in power_of_attorney:
-        if int(element) == id:
+        if int(element) == user_id:
             return power_of_attorney[element]
 
     return None
 
 
-def get_delete_text(date_str):
+def get_meeting_data_text(date_str):
+    """
+    ある日程の会議の議題と場所を書いた文字列を返す
+    """
     with open("../json/meetingData.json", "r", encoding="utf-8") as f:
         json_data = json.load(f)
     meeting_data = json_data[date_str]
@@ -56,15 +79,18 @@ def get_delete_text(date_str):
     return return_text
 
 
-def update_power_of_attorney(date: datetime, id: int, reason_text: str):
+def update_power_of_attorney(date: datetime, user_id: int, reason_text: str):
+    """
+    ある日程のあるユーザーの委任状データを更新する
+    """
     with open('../json/meetingData.json', 'r', encoding='utf-8') as f:
         existing_json = json.load(f)
 
     date_str = date.strftime("%Y-%m-%d %H:%M")
     if existing_json[date_str]["powerOfAttorney"]:
-        existing_json[date_str]["powerOfAttorney"][str(id)] = reason_text
+        existing_json[date_str]["powerOfAttorney"][str(user_id)] = reason_text
     else:
-        existing_json[date_str]["powerOfAttorney"] = {str(id): reason_text}
+        existing_json[date_str]["powerOfAttorney"] = {str(user_id): reason_text}
 
     with open('../json/meetingData.json', 'w', encoding='utf-8') as f:
         f.write(json.dumps(existing_json, indent=4, ensure_ascii=False))
@@ -103,6 +129,9 @@ def get_place():
 
 
 def get_resend_mail_text(date_str):
+    """
+    メールを再送する際の文字列を返す
+    """
     with open("../text/discordMail.txt", "r", encoding="utf-8") as f:
         lines = f.readlines()
     with open("../json/meetingData.json", "r", encoding="utf-8") as f:
@@ -127,3 +156,34 @@ def get_resend_mail_text(date_str):
         mail_text += line
 
     return mail_text
+
+
+def get_json_date_list():
+    """
+    会議の日程を文字列リストにして返す
+    """
+
+    def get_datetime(date_str):
+        return datetime.strptime(date_str, '%Y-%m-%d %H:%M')
+
+    def get_date_str(date):
+        return datetime.strftime(date, '%Y-%m-%d %H:%M')
+
+    with open("../json/meetingData.json", "r", encoding="utf-8") as f:
+        json_data = json.load(f)
+
+    # 現在より先の日程を取得する
+    date_str_list = list(json_data.keys())
+    date_list = list(map(get_datetime, date_str_list))
+    date_list = [date for date in date_list if datetime.now() < date]
+    date_list.sort()
+    date_str_list = list(map(get_date_str, date_list))
+
+    # 最大5つまで取得するようにする
+    return_date_list = []
+    for i in range(5):
+        if i >= len(date_str_list):
+            break
+        return_date_list.append(date_str_list[i])
+
+    return return_date_list

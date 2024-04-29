@@ -11,7 +11,7 @@ __date__ = "2024/04/06(Created: 2024/04/06)"
 
 import json
 import os
-from datetime import datetime, timedelta
+from datetime import datetime
 
 from bot import json_process
 
@@ -28,6 +28,9 @@ class RegisterData:
         self.message_id = None
 
     def save_to_json(self):
+        """
+        jsonにRegisterDataの内容を保存する
+        """
         date = self.date.strftime("%Y-%m-%d %H:%M")
 
         with open("./../json/meetingData.json", "r", encoding="utf-8") as f:
@@ -47,7 +50,10 @@ class RegisterData:
         with open("./../json/meetingData.json", "w", encoding="utf-8") as f:
             json.dump(existing_data, f, indent=4, ensure_ascii=False)
 
-    def return_mail_text(self):
+    def get_mail_text(self):
+        """
+        RegisterDataの内容を元にメール内容の文字列を返します
+        """
         weekdays = ['月', '火', '水', '木', '金', '土', '日']
         with open('../text/discordMail.txt', 'r', encoding='utf-8') as file:
             lines = file.readlines()

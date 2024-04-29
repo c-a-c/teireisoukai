@@ -13,12 +13,14 @@ import json
 import os
 from datetime import datetime
 
-import discord
 from discord.ext import commands
 from bot.ui import view
 
 
 class Restart(commands.Cog):
+    """
+    再起動したときにボタンのインタラクションを再設定します
+    """
     def __init__(self, bot):
         self.bot = bot
 
@@ -28,13 +30,10 @@ class Restart(commands.Cog):
         bot起動時にロードしていることを確認するためにprintします
         """
 
-        # await self.bot.tree.sync()
-
         with open("./../json/meetingData.json", "r", encoding="utf-8") as f:
             json_data = json.load(f)
 
-
-        #インタラクションボタンが反応するように再度設定
+        # インタラクションボタンが反応するように再度設定
         guild = self.bot.get_guild(int(os.getenv("CAC_GUILD_ID")))
         channel = guild.get_channel(int(os.getenv("CAC_CHANNEL_ID")))
         for date_str, data in json_data.items():
