@@ -18,6 +18,7 @@ import discord
 from discord.ext import commands, tasks
 
 from bot.ui import modal, view
+from bot import json_process
 
 
 class Task(commands.Cog):
@@ -69,7 +70,7 @@ class Task(commands.Cog):
         guild = self.bot.get_guild(int(os.getenv("CAC_GUILD_ID")))
         channel = guild.get_channel(int(os.getenv("CAC_CHANNEL_ID")))
         await channel.send(
-            get_resend_mail_text(date_str=one_day_later_str),
+            json_process.get_resend_mail_text(date_str=one_day_later_str),
             view=view.PowerOfAttorneyView(bot=self.bot, date=one_day_later)
         )
 
@@ -137,33 +138,6 @@ class Task(commands.Cog):
                 absence_list.append(member)
 
         return absence_list
-
-
-def get_resend_mail_text(date_str):
-    with open("./../text/discordMail.txt", "r", encoding="utf-8") as f:
-        lines = f.readlines()
-    with open("./../json/meetingData.json", "r", encoding="utf-8") as f:
-        json_data = json.load(f)
-
-    meeting_data = json_data[date_str]
-    date = datetime.strptime(date_str, "%Y-%m-%d %H:%M")
-    weekdays = ['月', '火', '水', '木', '金', '土', '日']
-
-    mail_text = "[再送]\n"
-    for line in lines:
-        line = line.replace("year", str(date.year))
-        line = line.replace("month", str(date.month))
-        line = line.replace("weekday", weekdays[date.weekday()])
-        line = line.replace("day", str(date.day))
-        line = line.replace("hour", str(date.hour))
-        line = line.replace("minute", str(date.minute))
-        line = line.replace("agenda", meeting_data["agenda"])
-        line = line.replace("place", meeting_data["place"])
-
-        mail_text += line
-
-    return mail_text
-
 
 async def setup(bot: commands.Bot):
     """

@@ -10,12 +10,13 @@ __version__ = "0.0.0"
 __date__ = "2024/04/06(Created: 2024/04/06)"
 
 import json
+import os
 from datetime import datetime
 import discord
 
 from bot.register_data_manager import RegisterDataManager
 from bot.ui import view
-
+from bot import json_process
 
 class IndividualDateModal(discord.ui.Modal):
     """
@@ -72,7 +73,7 @@ class RegisterAgenda(discord.ui.Modal):
 
         embed = discord.Embed(
             title="メール確認",
-            description=return_mail_text(interaction.user.id)
+            description=register_data.return_mail_text()
         )
         await interaction.response.send_message(view=view.SendMailView(bot=self.bot), embed=embed)
 
@@ -100,7 +101,7 @@ class RegisterPlace(discord.ui.Modal):
         data_dict.place = self.place.value
         embed = discord.Embed(
             title="メール確認",
-            description=return_mail_text(interaction.user.id)
+            description=data_dict.return_mail_text()
         )
         await interaction.response.send_message(view=view.SendMailView(bot=self.bot), embed=embed)
 
@@ -135,45 +136,9 @@ class RegisterPowerOfAttorney(discord.ui.Modal):
             description=text
         )
 
-        update_power_of_attorney(self.date, interaction.user.id, text)
+        json_process.update_power_of_attorney(date=self.date, id=interaction.user.id, reason_text=text)
         await interaction.response.send_message("以下の内容で提出しますか？", embed=embed,
                                                 view=view.SubmitPowerOfAttorneyView(bot=self.bot, date=self.date), ephemeral=True)
 
     async def on_error(self, interaction: discord.Interaction, error: Exception) -> None:
         await interaction.response.send_message(error)
-
-
-def return_mail_text(id: int):
-    register_data = RegisterDataManager.register_data_dict.get(id)
-    date = register_data.date
-    weekdays = ['月', '火', '水', '木', '金', '土', '日']
-    with open('./../text/discordMail.txt', 'r', encoding='utf-8') as file:
-        lines = file.readlines()
-    mail_text = ""
-    for line in lines:
-        line = line.replace("year", str(date.year))
-        line = line.replace("month", str(date.month))
-        line = line.replace("weekday", weekdays[date.weekday()])
-        line = line.replace("day", str(date.day))
-        line = line.replace("hour", str(date.hour))
-        line = line.replace("minute", str(date.minute))
-        line = line.replace("agenda", register_data.agenda)
-        line = line.replace("place", register_data.place)
-
-        mail_text += line
-
-    return mail_text
-
-
-def update_power_of_attorney(date: datetime, id: int, reason_text: str):
-    with open('./../json/meetingData.json', 'r', encoding='utf-8') as f:
-        existing_json = json.load(f)
-
-    date_str = date.strftime("%Y-%m-%d %H:%M")
-    if existing_json[date_str]["powerOfAttorney"]:
-        existing_json[date_str]["powerOfAttorney"][str(id)] = reason_text
-    else:
-        existing_json[date_str]["powerOfAttorney"] = {str(id): reason_text}
-
-    with open('./../json/meetingData.json', 'w', encoding='utf-8') as f:
-        f.write(json.dumps(existing_json, indent=4, ensure_ascii=False))

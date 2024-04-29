@@ -15,6 +15,7 @@ import discord
 
 from bot.register_data_manager import RegisterDataManager
 from bot.ui import view, modal
+from bot import json_process
 
 
 class DateSelect(discord.ui.Select):
@@ -83,22 +84,9 @@ class DeleteDateSelect(discord.ui.Select):
 
     async def callback(self, interaction: discord.Interaction):
         embed = discord.Embed(
-            description=get_delete_text(self.values[0])
+            description=json_process.get_delete_text(date_str=self.values[0])
         )
         await interaction.response.send_message("以下の会議を削除しますか？", embed=embed, view=view.DeleteMeetingView(bot=self.bot, date_str=self.values[0]))
 
         self.disabled = True
         await interaction.followup.edit_message(interaction.message.id, view=self.view)
-
-
-def get_delete_text(date_str):
-    with open("./../json/meetingData.json", "r", encoding="utf-8") as f:
-        json_data = json.load(f)
-    meeting_data = json_data[date_str]
-
-    return_text = ""
-    return_text += "◎議題\n" + meeting_data["agenda"] + "\n"
-    return_text += "場所: " + meeting_data["place"]
-
-    return return_text
-

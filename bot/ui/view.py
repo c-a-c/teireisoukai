@@ -15,10 +15,10 @@ from datetime import datetime
 
 import discord
 
-from bot import register_data_manager
 from bot.register_data_manager import RegisterDataManager
 from bot.ui import select
 from bot.ui import modal
+from bot import json_process
 
 
 class DateSelectView(discord.ui.View):
@@ -47,12 +47,12 @@ class ContinueAgendaView(discord.ui.View):
     @discord.ui.button(label="議題登録へ移る", style=discord.ButtonStyle.green)
     async def green(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
         await interaction.response.send_modal(modal.RegisterAgenda(bot=self.bot))
-        await disable_button_by_followup(self, interaction)
+        await _disable_button_by_followup(self, interaction)
 
     @discord.ui.button(label="戻る", style=discord.ButtonStyle.red)
     async def red(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
         await interaction.response.send_message(view=DateSelectView(bot=self.bot))
-        await disable_button_by_followup(self, interaction)
+        await _disable_button_by_followup(self, interaction)
 
 
 class SendMailView(discord.ui.View):
@@ -69,26 +69,26 @@ class SendMailView(discord.ui.View):
         guild = self.bot.get_guild(int(os.getenv("CAC_GUILD_ID")))
         channel = guild.get_channel(int(os.getenv("CAC_CHANNEL_ID")))
         message = await channel.send(
-            modal.return_mail_text(interaction.user.id),
+            register_data.return_mail_text(),
             view=PowerOfAttorneyView(bot=self.bot, date=register_data.date)
         )
         await interaction.response.send_message("送信しました。")
-        await disable_button_by_followup(self, interaction)
+        await _disable_button_by_followup(self, interaction)
 
         register_data.message_id = message.id
-        register_data.save_to_json()
+        register_data.save_to_json(register_data=register_data)
 
     @discord.ui.button(label="場所を変更する", style=discord.ButtonStyle.gray)
     async def gray(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
         await interaction.response.send_modal(modal.RegisterPlace(bot=self.bot))
-        await disable_button_by_followup(self, interaction)
+        await _disable_button_by_followup(self, interaction)
 
     @discord.ui.button(label="戻る", style=discord.ButtonStyle.red)
     async def red(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
         data_dict = RegisterDataManager.register_data_dict.get(interaction.user.id)
         embed = discord.Embed(title="登録日時", description=data_dict.date)
         await interaction.response.send_message(view=ContinueAgendaView(bot=self.bot), embed=embed)
-        await disable_button_by_followup(self, interaction)
+        await _disable_button_by_followup(self, interaction)
 
 
 class PowerOfAttorneyView(discord.ui.View):
@@ -107,7 +107,7 @@ class PowerOfAttorneyView(discord.ui.View):
 
     @discord.ui.button(label="委任状を取り消す", style=discord.ButtonStyle.red)
     async def red(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
-        text = get_power_of_attorney_text(self.date, interaction.user.id)
+        text = json_process.get_power_of_attorney_text(date=self.date, id=interaction.user.id)
         embed = discord.Embed(
             description=text
         )
@@ -134,7 +134,7 @@ class SubmitPowerOfAttorneyView(discord.ui.View):
     @discord.ui.button(label="提出", style=discord.ButtonStyle.green)
     async def green(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
         await interaction.response.send_message("委任状が受理されました。提出ありがとうございます。", ephemeral=True)
-        await disable_button_by_followup(self, interaction)
+        await _disable_button_by_followup(self, interaction)
 
 
 class DeletePowerOfAttorneyView(discord.ui.View):
@@ -147,9 +147,9 @@ class DeletePowerOfAttorneyView(discord.ui.View):
 
     @discord.ui.button(label="取り消す", style=discord.ButtonStyle.red)
     async def red(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
-        if delete_power_of_attorney(self.date, interaction.user.id):
+        if json_process.delete_power_of_attorney(date=self.date, id=interaction.user.id):
             await interaction.response.send_message("委任状が取り消されました。", ephemeral=True)
-            await disable_button_by_followup(self, interaction)
+            await _disable_button_by_followup(self, interaction)
         else:
             await interaction.response.send_message("削除時にエラーが発生しました。")
 
@@ -163,53 +163,12 @@ class DeleteMeetingView(discord.ui.View):
 
     @discord.ui.button(label="取り消す", style=discord.ButtonStyle.red)
     async def red(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
-        delete_meeting(self.date_str)
+        json_process.delete_meeting(date_str=self.date_str)
         await interaction.response.send_message(self.date_str + "会議を取り消しました。")
-        await disable_button_by_followup(self, interaction)
+        await _disable_button_by_followup(self, interaction)
 
 
-async def disable_button_by_followup(view: discord.ui.View, interaction: discord.Interaction):
+async def _disable_button_by_followup(view: discord.ui.View, interaction: discord.Interaction):
     for item in view.children:
         item.disabled = True
     await interaction.followup.edit_message(interaction.message.id, view=view)
-
-
-def get_power_of_attorney_text(date: datetime, id: int):
-    date_str = date.strftime("%Y-%m-%d %H:%M")
-    with open("./../json/meetingData.json") as f:
-        json_data = json.load(f)
-    power_of_attorney = json_data[date_str]["powerOfAttorney"]
-    for element in power_of_attorney:
-        if int(element) == id:
-            return power_of_attorney[element]
-
-    return None
-
-
-def delete_power_of_attorney(date: datetime, id: int):
-    date_str = date.strftime("%Y-%m-%d %H:%M")
-
-    with open("./../json/meetingData.json", "r", encoding="utf-8") as f:
-        json_data = json.load(f)
-
-    try:
-        power_of_attorney = json_data[date_str]["powerOfAttorney"]
-        power_of_attorney.pop(str(id))
-        json_data[date_str]["powerOfAttorney"] = power_of_attorney
-    except KeyError:
-        return False
-
-    with open("./../json/meetingData.json", "w", encoding="utf-8") as f:
-        json.dump(json_data, f, indent=4, ensure_ascii=False)
-
-    return True
-
-
-def delete_meeting(date_str):
-    with open("./../json/meetingData.json", "r", encoding="utf-8") as f:
-        json_data = json.load(f)
-
-    json_data.pop(date_str)
-
-    with open("./../json/meetingData.json", "w", encoding="utf-8") as f:
-        json.dump(json_data, f, indent=4, ensure_ascii=False)
