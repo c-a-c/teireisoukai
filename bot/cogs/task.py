@@ -41,7 +41,7 @@ class Task(commands.Cog):
 
         print('loaded : task.py')
 
-    @tasks.loop(seconds=5)
+    @tasks.loop(seconds=60)
     async def check_meeting(self):
         """
         現在時刻に会議があるか確認し、定例総会を開催できるかを通知する
@@ -84,7 +84,7 @@ class Task(commands.Cog):
             )
             await self.send_dm_to_members(self.get_absence_member_list(now_str))
 
-    @tasks.loop(seconds=5)
+    @tasks.loop(seconds=60)
     async def check_attendance_rate(self):
         """
         会議の出席率が2/3を満たしていない場合開催時間+15分まで1分おきに出席率を通知するようにする
