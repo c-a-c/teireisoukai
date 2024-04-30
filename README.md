@@ -35,11 +35,7 @@
 `/register`で登録した会議は`/delete_meeting`で削除できます。
 操作は`/register`と同様です。
 
-## Versions
-
-??????
-
-## Dev
+## 開発
 
 ### .env
 ```
