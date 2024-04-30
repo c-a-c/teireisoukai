@@ -97,7 +97,7 @@ class SendMailView(discord.ui.View):
         await _disable_button_by_followup(self, interaction)
 
         register_data.message_id = message.id
-        register_data.save_to_json(register_data=register_data)
+        register_data.save_to_json()
 
     @discord.ui.button(label="場所を変更する", style=discord.ButtonStyle.gray)
     async def gray(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
@@ -220,6 +220,27 @@ class DeleteMeetingView(discord.ui.View):
         json_process.delete_meeting(date_str=self.date_str)
         await interaction.response.send_message(self.date_str + "の会議を取り消しました。")
         await _disable_button_by_followup(self, interaction)
+
+
+class DetailMeetingMemberView(discord.ui.View):
+    """
+    欠席者と委任状提出者を表示するボタンのui
+    """
+
+    def __init__(self, bot, absence_text, power_of_attorney_text):
+        self.bot = bot
+        self.absence_text = absence_text
+        self.power_of_attorney_text = power_of_attorney_text
+
+        super().__init__()
+
+    @discord.ui.button(label="欠席者を表示", style=discord.ButtonStyle.gray)
+    async def gray1(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
+        await interaction.response.send_message(self.absence_text, ephemeral=True)
+
+    @discord.ui.button(label="委任状提出者を表示", style=discord.ButtonStyle.gray)
+    async def gray2(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
+        await interaction.response.send_message(self.power_of_attorney_text, ephemeral=True)
 
 
 async def _disable_button_by_followup(view: discord.ui.View, interaction: discord.Interaction):

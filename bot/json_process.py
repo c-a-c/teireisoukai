@@ -187,3 +187,42 @@ def get_json_date_list():
         return_date_list.append(date_str_list[i])
 
     return return_date_list
+
+
+def get_within_15minutes_date_str():
+    """
+    開催時間+15分以内に存在するdate_strを返す
+    （開催時間丁度は含めない）
+    """
+    now = datetime.now()
+    now = now.replace(second=0, microsecond=0)
+
+    with open("./../json/meetingData.json", "r", encoding="utf-8") as f:
+        json_data = json.load(f)
+
+    for date_str in json_data.keys():
+        # 既に開催されたものを除外
+        if json_data[date_str]["heldBool"]:
+            continue
+
+        # +1~15分で確認
+        start_time = datetime.strptime(date_str, "%Y-%m-%d %H:%M")
+        for i in range(1, 16):
+            current_time = start_time + timedelta(minutes=i)
+            if now == current_time:
+                print(now, current_time)
+                return date_str
+
+    return None
+
+
+def update_held_bool_true(date_str):
+    with open("./../json/meetingData.json", "r", encoding="utf-8") as f:
+        json_data = json.load(f)
+
+    json_data[date_str]["heldBool"] = True
+
+    with open("../json/meetingData.json", "w", encoding="utf-8") as f:
+        json.dump(json_data, f, indent=4, ensure_ascii=False)
+
+

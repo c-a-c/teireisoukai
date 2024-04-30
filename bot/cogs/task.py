@@ -36,6 +36,7 @@ class Task(commands.Cog):
         """
 
         self.check_meeting.start()
+        self.check_attendance_rate.start()
         self.check_resend.start()
 
         print('loaded : task.py')
@@ -43,7 +44,7 @@ class Task(commands.Cog):
     @tasks.loop(seconds=5)
     async def check_meeting(self):
         """
-        現在時刻に会議があるか確認します
+        現在時刻に会議があるか確認し、定例総会を開催できるかを通知する
         """
         now = datetime.now()
         now_str = now.strftime("%Y-%m-%d %H:%M")
@@ -55,11 +56,68 @@ class Task(commands.Cog):
             # print("会議ないよ")
             return
 
-        if self.get_attendance_rate(now_str) > 2 / 3:
+        guild = self.bot.get_guild(int(os.getenv("MEETING_GUILD_ID")))
+        channel = guild.get_channel(int(os.getenv("MEETING_CHAT_CHANNEL_ID")))
+
+        percentage = self.get_attendance_rate(now_str) * 100
+
+        # 定例総会に必要な出席率は2/3
+        if self.get_attendance_rate(now_str) >= 2 / 3:
+            await channel.send(
+                "定例総会を開催できます。(出席率: " + str(percentage) + "%)",
+                view=view.DetailMeetingMemberView(
+                    bot=self.bot,
+                    absence_text=self.get_absence_member_text(now_str),
+                    power_of_attorney_text=self.get_power_of_attorney_member_text(now_str)
+                )
+            )
+            json_process.update_held_bool_true(now_str)
             print("定例総会を開催できます。")
         else:
-            print("開催できません。")
+            await channel.send(
+                "定例総会を開催できません。(出席率: " + str(percentage) + "%)",
+                view=view.DetailMeetingMemberView(
+                    bot=self.bot,
+                    absence_text=self.get_absence_member_text(now_str),
+                    power_of_attorney_text=self.get_power_of_attorney_member_text(now_str)
+                )
+            )
             await self.send_dm_to_members(self.get_absence_member_list(now_str))
+
+    @tasks.loop(seconds=5)
+    async def check_attendance_rate(self):
+        """
+        会議の出席率が2/3を満たしていない場合開催時間+15分まで1分おきに出席率を通知するようにする
+        """
+
+        date_str = json_process.get_within_15minutes_date_str()
+        if date_str is None:
+            return
+        guild = self.bot.get_guild(int(os.getenv("MEETING_GUILD_ID")))
+        channel = guild.get_channel(int(os.getenv("MEETING_CHAT_CHANNEL_ID")))
+
+        percentage = self.get_attendance_rate(date_str) * 100
+
+        # 定例総会に必要な出席率は2/3
+        if self.get_attendance_rate(date_str) >= 2 / 3:
+            await channel.send(
+                "定例総会を開催できます。(出席率: " + str(percentage) + "%)",
+                view=view.DetailMeetingMemberView(
+                    bot=self.bot,
+                    absence_text=self.get_absence_member_text(date_str),
+                    power_of_attorney_text=self.get_power_of_attorney_member_text(date_str)
+                )
+            )
+            json_process.update_held_bool_true(date_str)
+        else:
+            await channel.send(
+                "定例総会を開催できません。(出席率: " + str(percentage) + "%)",
+                view=view.DetailMeetingMemberView(
+                    bot=self.bot,
+                    absence_text=self.get_absence_member_text(date_str),
+                    power_of_attorney_text=self.get_power_of_attorney_member_text(date_str)
+                )
+            )
 
     @tasks.loop(seconds=5)
     async def check_resend(self):
@@ -121,10 +179,6 @@ class Task(commands.Cog):
 
             number_of_vc_member += 1
 
-        print("number_of_current_club_member", len(current_club_member_role.members))
-        print("number_of_vc_member", number_of_vc_member)
-        print("number_of_power_of_attorney", number_of_power_of_attorney)
-
         attendance_rate = (
                 (number_of_vc_member + number_of_power_of_attorney) / number_of_current_club_member
         )
@@ -133,23 +187,19 @@ class Task(commands.Cog):
 
     def get_absence_member_list(self, now_str: str):
         """
-        ある会議の欠席者リストを返します
+        ある会議の欠席者のlistを返します
         """
         guild = discord.utils.get(self.bot.guilds, id=int(os.getenv("MEETING_GUILD_ID")))
         meeting_vc_channel = guild.get_channel(int(os.getenv("MEETING_VC_CHANNEL_ID")))
         current_club_member_role = guild.get_role(int(os.getenv("CURRENT_MEMBER_ROLE_ID")))
 
-        with open("./../json/meetingData.json", "r", encoding="utf-8") as f:
-            json_data = json.load(f)
-
-        power_of_attorney_members_list = list(json_data[now_str]["powerOfAttorney"].keys())
+        power_of_attorney_members_list = self.get_power_of_attorney_member_list(now_str=now_str)
 
         attendance_list = []
         for member in meeting_vc_channel.members:
             attendance_list.append(member)
 
-        for member_id in power_of_attorney_members_list:
-            member = guild.get_member(int(member_id))
+        for member in power_of_attorney_members_list:
             attendance_list.append(member)
 
         absence_list = []
@@ -158,6 +208,45 @@ class Task(commands.Cog):
                 absence_list.append(member)
 
         return absence_list
+
+    def get_power_of_attorney_member_list(self, now_str: str):
+        """
+        委任状提出者のメンバーのlistを返します
+        """
+        guild = discord.utils.get(self.bot.guilds, id=int(os.getenv("MEETING_GUILD_ID")))
+
+        with open("./../json/meetingData.json", "r", encoding="utf-8") as f:
+            json_data = json.load(f)
+
+        members_id_list = list(json_data[now_str]["powerOfAttorney"].keys())
+        members_list = []
+        for member_id in members_id_list:
+            member = guild.get_member(int(member_id))
+            members_list.append(member)
+
+        return members_list
+
+    def get_power_of_attorney_member_text(self, now_str: str):
+        """
+        委任状提出者をまとめて文字列にして返します
+        """
+        members_list = self.get_power_of_attorney_member_list(now_str=now_str)
+        return_text = "◎委任状提出者\n"
+        for member in members_list:
+            return_text += member.mention + "\n"
+
+        return return_text
+
+    def get_absence_member_text(self, now_str: str):
+        """
+        欠席者をまとめて文字列にして返します
+        """
+        members_list = self.get_absence_member_list(now_str=now_str)
+        return_text = "◎欠席者\n"
+        for member in members_list:
+            return_text += member.mention + "\n"
+
+        return return_text
 
 
 async def setup(bot: commands.Bot):

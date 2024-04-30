@@ -16,6 +16,7 @@ from bot.register_data_manager import RegisterDataManager
 from bot.ui import view
 from bot import json_process
 
+
 class IndividualDateModal(discord.ui.Modal):
     """
     日時の個別設定を選択した際に表示するmodal
@@ -41,10 +42,13 @@ class IndividualDateModal(discord.ui.Modal):
         RegisterData.dateに入力した日時を束縛し、ContinueAgendaViewを表示させる
         """
         date_format = "%Y/%m/%d/%H/%M"
-        register_data = RegisterDataManager.register_data_dict.get(interaction.user.id)
-        register_data.date = datetime.strptime(self.date.value, date_format)
-        embed = discord.Embed(title="登録日時", description=register_data.date)
-        await interaction.response.send_message(view=view.ContinueAgendaView(bot=self.bot), embed=embed)
+        try:
+            register_data = RegisterDataManager.register_data_dict.get(interaction.user.id)
+            register_data.date = datetime.strptime(self.date.value, date_format)
+            embed = discord.Embed(title="登録日時", description=register_data.date)
+            await interaction.response.send_message(view=view.ContinueAgendaView(bot=self.bot), embed=embed)
+        except ValueError:
+            await interaction.response.send_message("入力にミスが発生しました。再度入力し直してください。")
 
     async def on_error(self, interaction: discord.Interaction, error: Exception) -> None:
         """

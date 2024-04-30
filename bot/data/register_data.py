@@ -41,6 +41,7 @@ class RegisterData:
                 "agenda": self.agenda,
                 "place": self.place,
                 "messageID": self.message_id,
+                "heldBool": False,
                 "powerOfAttorney": {
                 }
             }
