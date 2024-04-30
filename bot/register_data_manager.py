@@ -13,8 +13,14 @@ from bot.data.register_data import RegisterData
 
 
 class RegisterDataManager:
+    """
+    同時に登録を可能にするために、複数のユーザーの入力を管理するクラス
+    """
     register_data_dict = {}
 
     @classmethod
-    def add_data(cls, id: int):
-        cls.register_data_dict[id] = RegisterData()
+    def add_data(cls, user_id: int):
+        """
+        RegisterDataを追加する
+        """
+        cls.register_data_dict[user_id] = RegisterData()

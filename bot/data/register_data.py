@@ -10,7 +10,10 @@ __version__ = "0.0.0"
 __date__ = "2024/04/06(Created: 2024/04/06)"
 
 import json
-from datetime import datetime, timedelta
+import os
+from datetime import datetime
+
+from bot import json_process
 
 
 class RegisterData:
@@ -19,33 +22,54 @@ class RegisterData:
     """
 
     def __init__(self):
-        self.date = None
+        self.date = datetime.now()
         self.agenda = None
-        self.place = get_place_by_json()
+        self.place = json_process.get_place()
+        self.message_id = None
 
+    def save_to_json(self):
+        """
+        jsonにRegisterDataの内容を保存する
+        """
+        date = self.date.strftime("%Y-%m-%d %H:%M")
 
-def get_place_by_json():
-    """
-    直近の場所を取得してくる
-    """
-    most_recent_days = None
-    current_date = datetime.now().date()
-    with open("./../json/meetingData.json", encoding="utf-8") as f:
-        json_dict = json.load(f)
-    keys_list = list(json_dict.keys())
-    for date_str in keys_list:
-        date = datetime.strptime(date_str, "%Y-%m-%d").date()
-        subtract_days = (current_date - date).days
-        if subtract_days <= 0:
-            continue
-        if most_recent_days is None:
-            most_recent_days = 10 ** 18
-        most_recent_days = min(most_recent_days, subtract_days)
+        with open("./../json/meetingData.json", "r", encoding="utf-8") as f:
+            existing_data = json.load(f)
 
-    if most_recent_days is None:
-        first_element = json_dict[keys_list[0]]
-        return first_element["place"]
+        data = {
+            date: {
+                "agenda": self.agenda,
+                "place": self.place,
+                "messageID": self.message_id,
+                "heldBool": False,
+                "powerOfAttorney": {
+                }
+            }
+        }
+        existing_data.update(data)
 
-    most_recent_date = current_date - timedelta(days=most_recent_days)
-    date_str = most_recent_date.strftime("%Y-%m-%d")
-    return json_dict[date_str]["place"]
+        with open("./../json/meetingData.json", "w", encoding="utf-8") as f:
+            json.dump(existing_data, f, indent=4, ensure_ascii=False)
+
+    def get_mail_text(self):
+        """
+        RegisterDataの内容を元にメール内容の文字列を返します
+        """
+        weekdays = ['月', '火', '水', '木', '金', '土', '日']
+        with open('../text/discordMail.txt', 'r', encoding='utf-8') as file:
+            lines = file.readlines()
+        mail_text = ""
+        for line in lines:
+            line = line.replace("roleID", os.getenv("MEMBER_ROLE_ID"))
+            line = line.replace("year", str(self.date.year))
+            line = line.replace("month", str(self.date.month))
+            line = line.replace("weekday", weekdays[self.date.weekday()])
+            line = line.replace("day", str(self.date.day))
+            line = line.replace("hour", str(self.date.hour))
+            line = line.replace("minute", str(self.date.minute))
+            line = line.replace("agenda", self.agenda)
+            line = line.replace("place", self.place)
+
+            mail_text += line
+
+        return mail_text
