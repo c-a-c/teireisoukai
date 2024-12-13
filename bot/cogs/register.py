@@ -30,6 +30,7 @@ class Register(commands.Cog):
         """
         会議を登録します
         """
+        # if interaction.guild.id == os.getenv("")
 
         RegisterDataManager.add_data(interaction.user.id)
         await interaction.response.send_message(view=view.DateSelectView(bot=self.bot))

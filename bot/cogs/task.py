@@ -119,7 +119,7 @@ class Task(commands.Cog):
                 )
             )
 
-    @tasks.loop(seconds=5)
+    @tasks.loop(seconds=60)
     async def check_resend(self):
         """
         会議の1日前であればメールを再送するようにします
@@ -133,13 +133,16 @@ class Task(commands.Cog):
         if one_day_later_str not in json_data:
             print("1日後に定例総会ないよ")
             return
+        print("1日後にあるよ")
 
         guild = self.bot.get_guild(int(os.getenv("CAC_GUILD_ID")))
         channel = guild.get_channel(int(os.getenv("CAC_CHANNEL_ID")))
         await channel.send(
             json_process.get_resend_mail_text(date_str=one_day_later_str),
             view=view.PowerOfAttorneyView(bot=self.bot, date=one_day_later)
+
         )
+        # view = view.PowerOfAttorneyView(bot=self.bot, date=one_day_later)
 
     async def send_dm_to_members(self, members: List[discord.Member]):
         """

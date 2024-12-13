@@ -1,43 +1,39 @@
 {
-    "2024-04-24 18:50": {
-        "agenda": "・あ",
-        "place": "10205, 10206, Discord(定例総会サーバー)",
-        "messageID": 1234416059810054156,
+    "2024-11-13 13:30": {
+        "agenda": "・aaaaaaa",
+        "place": "10201教室、Discord",
+        "messageID": 1306151944330412043,
+        "heldBool": false,
+        "powerOfAttorney": {}
+    },
+    "2024-11-13 17:22": {
+        "agenda": "・kkkk",
+        "place": "10201教室、Discord",
+        "messageID": 1306165689090048020,
         "heldBool": true,
         "powerOfAttorney": {}
     },
-    "2024-04-30 11:26": {
-        "agenda": "・ｆｄさｆｓ",
-        "place": "10205, 10206, Discord(定例総会サーバー)",
-        "messageID": 1234691904025919518,
-        "heldBool": true,
-        "powerOfAttorney": {}
-    },
-    "2024-05-01 13:30": {
-        "agenda": "・制作合宿",
-        "place": "10205, 10206, Discord(定例総会サーバー)",
-        "messageID": 1234702259162583040,
+    "2024-11-20 13:30": {
+        "agenda": "・uuu",
+        "place": "10201教室、Discord",
+        "messageID": 1306173355392765972,
         "heldBool": false,
         "powerOfAttorney": {
-            "557978187221565482": "議長殿 私は2024年5月1日実施の定例総会において、決議権を行使する一切の権限を委任いたします。\n提出日: 2024年4月30日\ndiscord名: simeiro\n理由: 授業\n"
+            "557978187221565482": "議長殿 私は2024年11月20日実施の定例総会において、決議権を行使する一切の権限を委任いたします。\n提出日: 2024年11月13日\ndiscord名: simeiro\n理由: eeee\n"
         }
     },
-    "2024-04-30 12:52": {
-        "agenda": "・ｆｄさｆだｓっっｆ",
-        "place": "10205, 10206, Discord(定例総会サーバー)",
-        "messageID": 1234713646492422145,
-        "heldBool": true,
-        "powerOfAttorney": {
-            "591969804546473994": "議長殿 私は2024年4月30日実施の定例総会において、決議権を行使する一切の権限を委任いたします。\n提出日: 2024年4月30日\ndiscord名: sime2ro\n理由: kkkk\n"
-        }
+    "2024-12-13 13:12": {
+        "agenda": "・a",
+        "place": "10201教室、Discord",
+        "messageID": 1316980895231774751,
+        "heldBool": false,
+        "powerOfAttorney": {}
     },
-    "2024-04-30 13:32": {
-        "agenda": "・神山祭\n・制作合宿",
-        "place": "10205, 10206, Discord(定例総会サーバー)",
-        "messageID": 1234723842535198791,
-        "heldBool": true,
-        "powerOfAttorney": {
-            "557978187221565482": "議長殿 私は2024年4月30日実施の定例総会において、決議権を行使する一切の権限を委任いたします。\n提出日: 2024年4月30日\ndiscord名: simeiro\n理由: 授業\n"
-        }
+    "2024-12-14 22:04": {
+        "agenda": "・あ\n・１",
+        "place": "10201教室、Discord",
+        "messageID": 1317114525824188456,
+        "heldBool": false,
+        "powerOfAttorney": {}
     }
 }

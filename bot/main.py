@@ -16,7 +16,6 @@ from discord.ext import commands
 from dotenv import load_dotenv
 
 
-
 INITIAL_EXTENTIONS = [
     "cogs.register",
     "cogs.task",
@@ -46,6 +45,7 @@ async def load_extension():
     cogをロードする
     """
     for cog in INITIAL_EXTENTIONS:
+        print(1)
         await bot.load_extension(cog)
 
 

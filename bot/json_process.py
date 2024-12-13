@@ -140,10 +140,10 @@ def get_resend_mail_text(date_str):
     meeting_data = json_data[date_str]
     date = datetime.strptime(date_str, "%Y-%m-%d %H:%M")
     weekdays = ['月', '火', '水', '木', '金', '土', '日']
-
     mail_text = "[再送]\n"
+
     for line in lines:
-        line = line.replace("roleID", os.getenv("MEETING_ROLE_ID"))
+        line = line.replace("roleID", os.getenv("MEMBER_ROLE_ID"))
         line = line.replace("year", str(date.year))
         line = line.replace("month", str(date.month))
         line = line.replace("weekday", weekdays[date.weekday()])
